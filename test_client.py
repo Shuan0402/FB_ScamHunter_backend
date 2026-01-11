@@ -1,6 +1,6 @@
 import requests
 
-url = "http://127.0.0.1:8000/analyze"
+url = "https://fb-scamhunter-backend.onrender.com/analyze"
 data = {
     "ad_id": "123456789",
     "ad_context": "這是一則測試廣告內容",
