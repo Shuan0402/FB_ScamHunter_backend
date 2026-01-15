@@ -89,6 +89,11 @@ class ScamDetector:
         df['is_page_anomaly'] = df.apply(self._check_page_anomaly, axis=1)
         df['domain_spoofing'] = df.apply(self._check_domain_mismatch, axis=1)
         
+        df['interaction_ratio'] = df.apply(
+            lambda r: r['ad_like_count'] / r['ad_page_like_count'] if r['ad_page_like_count'] > 0 else 0, 
+            axis=1
+        )
+
         # 關鍵字計數
         def count_keywords(text):
             count = 0
@@ -105,6 +110,8 @@ class ScamDetector:
         df['text_length'] = context.apply(len)
         emoji_pattern = r'[^\w\s,\.，。！!\?\?]'
         df['text_emoji_count'] = context.apply(lambda x: self._count_pattern(x, emoji_pattern))
+        df['text_all_emoji_count'] = context.apply(lambda x: self._count_pattern(x, emoji_pattern))
+        df['text_risk_emoji_count'] = df['text_all_emoji_count']
 
         # 4. NLP TF-IDF 特徵
         # 先斷詞
@@ -119,14 +126,19 @@ class ScamDetector:
         # 5. 合併所有特徵
         # 定義正確的特徵順序 (必須跟訓練時完全一樣)
         base_features = [
-            'ad_page_like_count', 'ad_like_count', 
-            'is_page_anomaly', 'domain_spoofing', 'risk_keyword_count',
-            'text_exclamation_count', 'text_question_count', 
-            'text_digit_count', 'text_length', 'text_emoji_count'
+            'ad_page_like_count', 'ad_like_count', 'interaction_ratio', 'is_page_anomaly', 
+            'domain_spoofing', 'risk_keyword_count', 'text_exclamation_count', 
+            'text_question_count', 'text_digit_count', 'text_length', 
+            'text_risk_emoji_count', 'text_all_emoji_count', 
+            'tfidf_健康', 'tfidf_優惠', 'tfidf_免費', 'tfidf_全館', 'tfidf_分享', 
+            'tfidf_加入', 'tfidf_台灣', 'tfidf_回饋', 'tfidf_我們', 'tfidf_折起', 
+            'tfidf_新年', 'tfidf_日本', 'tfidf_最高', 'tfidf_生活', 'tfidf_立即', 
+            'tfidf_系列', 'tfidf_自己', 'tfidf_設計', 'tfidf_限量', 'tfidf_領取'
         ]
         
         # 合併數值特徵與 TF-IDF 特徵
-        final_df = pd.concat([df[base_features], tfidf_df], axis=1)
+        combined_df = pd.concat([df, tfidf_df], axis=1)
+        final_df = combined_df[base_features]
         
         # 6. 轉為 DMatrix 供 XGBoost 使用
         dmatrix = xgb.DMatrix(final_df)
