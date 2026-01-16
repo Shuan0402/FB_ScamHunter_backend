@@ -38,11 +38,11 @@ async def analyze_ad_endpoint(data: AdData):
         return {"status": "error", "message": "Model not loaded"}
 
     ad_dict = data.model_dump()
-    is_scam, score = detector.predict(ad_dict)
+    is_scam, score, reasons = detector.predict(ad_dict)
 
     return {
         "ad_id": data.ad_id,        # str
         "prediction": is_scam,      # bool
-        "confidence_score": score,  # 相似度分數, str
+        "confidence_score": f"{score:.4f}",  # 相似度分數, str
         "status": "success"
     }
