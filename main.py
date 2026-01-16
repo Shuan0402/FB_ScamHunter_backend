@@ -41,8 +41,8 @@ async def analyze_ad_endpoint(data: AdData):
     is_scam, score = detector.predict(ad_dict)
 
     return {
-        "ad_id": data.ad_id,
-        "prediction": is_scam,
-        "confidence_score": score,   # 相似度分數
+        "ad_id": data.ad_id,        # str
+        "prediction": is_scam,      # bool
+        "confidence_score": score,  # 相似度分數, str
         "status": "success"
     }
